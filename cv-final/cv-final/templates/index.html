@@ -1,0 +1,716 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candlestick Chart Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f8fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-image: linear-gradient(to bottom right, #f5f8fa, #e5e8f0);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-bottom: 4px solid var(--primary);
+        }
+        
+        h1 {
+            margin: 0;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--light);
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .upload-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+        
+        .upload-title {
+            font-size: 1.8em;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .upload-description {
+            color: #777;
+            margin-bottom: 20px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .file-input-button {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-input-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cropper-section {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .crop-title {
+            font-size: 1.8em;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .crop-description {
+            color: #777;
+            margin-bottom: 20px;
+        }
+        
+        .cropper-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .img-container {
+            max-height: 500px;
+            margin-bottom: 20px;
+        }
+        
+        .img-container img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .button {
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .button-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .button-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .button-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .processing-section {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .processing-title {
+            font-size: 1.8em;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .processing-spinner {
+            margin: 30px auto;
+            width: 80px;
+            height: 80px;
+            border: 8px solid var(--light);
+            border-top: 8px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .result-title {
+            font-size: 1.8em;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .result-card {
+            background-color: var(--light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-signal {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .result-signal.buy {
+            color: var(--success);
+        }
+        
+        .result-signal.sell {
+            color: var(--danger);
+        }
+        
+        .result-signal.wait {
+            color: var(--warning);
+        }
+        
+        .result-accuracy {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .animated-letter {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.3s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .signal-animation {
+            height: 4px;
+            width: 0%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transition: width 3s ease;
+        }
+        
+        .buy-animation {
+            background-color: var(--success);
+        }
+        
+        .sell-animation {
+            background-color: var(--danger);
+        }
+        
+        .wait-animation {
+            background-color: var(--warning);
+        }
+        
+        .image-preview-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .image-preview {
+            flex: 1;
+            padding: 10px;
+            max-width: 48%;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .image-preview-label {
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: var(--light);
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            width: 0;
+            background-color: var(--primary);
+            transition: width 0.5s ease;
+        }
+        
+        .reset-button {
+            background-color: var(--secondary);
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .reset-button:hover {
+            background-color: #1a252f;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(231, 76, 60, 0.1);
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Candlestick Chart Analyzer</h1>
+            <p class="subtitle">Upload a chart and get trading signals with AI</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section id="upload-section" class="upload-section">
+                <h2 class="upload-title">Upload Your Candlestick Chart</h2>
+                <p class="upload-description">Upload a candlestick chart image for analysis. For best results, use a clear image of a candlestick chart.</p>
+                
+                <div class="file-input-wrapper">
+                    <button class="file-input-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Choose Image
+                    </button>
+                    <input type="file" id="chart-upload" class="file-input" accept="image/*">
+                </div>
+                <div id="error-message" class="error-message"></div>
+            </section>
+            
+            <!-- Cropping Section -->
+            <section id="cropper-section" class="cropper-section">
+                <h2 class="crop-title">Crop Your Chart</h2>
+                <p class="crop-description">Crop the image to remove dates, prices, and other text. Include only the candlestick chart pattern.</p>
+                
+                <div class="img-container">
+                    <img id="image-to-crop">
+                </div>
+                
+                <div class="button-group">
+                    <button id="crop-cancel" class="button button-danger">Cancel</button>
+                    <button id="crop-confirm" class="button button-primary">Crop & Analyze</button>
+                </div>
+            </section>
+            
+            <!-- Processing Section -->
+            <section id="processing-section" class="processing-section">
+                <h2 class="processing-title">Processing Your Chart</h2>
+                <p>Please wait while we analyze your candlestick chart...</p>
+                <div class="processing-spinner"></div>
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+            </section>
+            
+            <!-- Result Section -->
+            <section id="result-section" class="result-section">
+                <h2 class="result-title">Trading Signal Prediction</h2>
+                
+                <div class="image-preview-container">
+                    <div class="image-preview">
+                        <div class="image-preview-label">Original Image</div>
+                        <img id="original-preview">
+                    </div>
+                    <div class="image-preview">
+                        <div class="image-preview-label">Processed Image</div>
+                        <img id="processed-preview">
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div id="result-signal" class="result-signal"></div>
+                    <div id="result-accuracy" class="result-accuracy"></div>
+                    <div id="signal-animation" class="signal-animation"></div>
+                </div>
+                
+                <button id="reset-button" class="button reset-button">Analyze Another Chart</button>
+            </section>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>Candlestick Chart Analyzer - Powered by TensorFlow and Computer Vision sahil vaghasiya & kaushal barambhiya & dhruv kotadiya & jayanish nariya</p>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const uploadSection = document.getElementById('upload-section');
+        const cropperSection = document.getElementById('cropper-section');
+        const processingSection = document.getElementById('processing-section');
+        const resultSection = document.getElementById('result-section');
+        const fileInput = document.getElementById('chart-upload');
+        const imageToCrop = document.getElementById('image-to-crop');
+        const cropCancelButton = document.getElementById('crop-cancel');
+        const cropConfirmButton = document.getElementById('crop-confirm');
+        const resetButton = document.getElementById('reset-button');
+        const resultSignal = document.getElementById('result-signal');
+        const resultAccuracy = document.getElementById('result-accuracy');
+        const signalAnimation = document.getElementById('signal-animation');
+        const originalPreview = document.getElementById('original-preview');
+        const processedPreview = document.getElementById('processed-preview');
+        const progressBar = document.getElementById('progress');
+        const errorMessage = document.getElementById('error-message');
+        
+        // Global variables
+        let cropper;
+        let originalImage;
+        
+        // Check if model is loaded
+        async function checkModelStatus() {
+            try {
+                const response = await fetch('/api/model_status');
+                const data = await response.json();
+                
+                if (!data.loaded) {
+                    showError("Model is not loaded. Please try again later.");
+                }
+            } catch (error) {
+                showError("Failed to connect to server. Please refresh the page.");
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+        
+        // Initialize the application
+        async function init() {
+            // Check model status
+            await checkModelStatus();
+            
+            // Listen for file input
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            // Setup cropper buttons
+            cropCancelButton.addEventListener('click', resetApp);
+            cropConfirmButton.addEventListener('click', processCroppedImage);
+            
+            // Setup reset button
+            resetButton.addEventListener('click', resetApp);
+        }
+        
+        // Handle file upload
+        function handleFileUpload(e) {
+            hideError();
+            
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Check file size (limit to 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError("File size too large. Please select an image under 5MB.");
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Store original image for later use
+                originalImage = new Image();
+                originalImage.src = event.target.result;
+                originalPreview.src = event.target.result;
+                
+                // Setup cropper
+                imageToCrop.src = event.target.result;
+                uploadSection.style.display = 'none';
+                cropperSection.style.display = 'block';
+                
+                // Initialize cropper after image loads
+                imageToCrop.onload = function() {
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    
+                    cropper = new Cropper(imageToCrop, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        guides: true,
+                        background: false,
+                        autoCrop: true,
+                        autoCropArea: 0.8,
+                        responsive: true,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        dragMode: 'move'
+                    });
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Process cropped image
+        async function processCroppedImage() {
+            hideError();
+            
+            // Get cropped canvas
+            const croppedCanvas = cropper.getCroppedCanvas({
+                width: 512,
+                height: 512
+            });
+            
+            // Show processing section
+            cropperSection.style.display = 'none';
+            processingSection.style.display = 'block';
+            
+            // Start progress animation
+            simulateProgress();
+            
+            try {
+                // Get image data URL
+                const imageDataUrl = croppedCanvas.toDataURL('image/png');
+                
+                // Send to server for processing and prediction
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: imageDataUrl
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                // Update processed image preview
+                processedPreview.src = result.processedImage;
+                
+                // Show results
+                setTimeout(() => {
+                    displayResults({
+                        class: result.class,
+                        probability: result.confidence
+                    });
+                }, 1000); // Delay for visual effect
+                
+            } catch (error) {
+                processingSection.style.display = 'none';
+                uploadSection.style.display = 'block';
+                showError(`Error: ${error.message}`);
+            }
+        }
+        
+        // Display prediction results
+        function displayResults(prediction) {
+            // Hide processing section
+            processingSection.style.display = 'none';
+            resultSection.style.display = 'block';
+            
+            // Clear previous results
+            resultSignal.innerHTML = '';
+            resultSignal.className = 'result-signal';
+            resultAccuracy.innerText = '';
+            
+            // Set result class
+            resultSignal.classList.add(prediction.class);
+            
+            // Animate result signal
+            const word = prediction.class.toUpperCase();
+            
+            // Display probability
+            const probability = Math.round(prediction.probability * 100);
+            resultAccuracy.innerText = `Confidence: ${probability}%`;
+            
+            // Animate the signal bar
+            signalAnimation.className = `signal-animation ${prediction.class}-animation`;
+            setTimeout(() => {
+                signalAnimation.style.width = '100%';
+            }, 100);
+            
+            // Animate each letter with delay
+            for (let i = 0; i < word.length; i++) {
+                const letter = document.createElement('span');
+                letter.className = 'animated-letter';
+                letter.textContent = word[i];
+                letter.style.animationDelay = `${i * 0.2}s`;
+                resultSignal.appendChild(letter);
+            }
+        }
+        
+        // Simulate progress animation
+        function simulateProgress() {
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                } else {
+                    width += 2;
+                    progressBar.style.width = width + '%';
+                }
+            }, 50);
+        }
+        
+        // Reset the application
+        function resetApp() {
+            hideError();
+            
+            // Reset UI
+            uploadSection.style.display = 'block';
+            cropperSection.style.display = 'none';
+            processingSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            
+            // Reset file input
+            fileInput.value = '';
+            
+            // Reset cropper
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            // Reset progress
+            progressBar.style.width = '0%';
+            
+            // Reset signal animation
+            signalAnimation.style.width = '0%';
+        }
+        
+        // Initialize when document is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
